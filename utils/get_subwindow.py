@@ -13,58 +13,38 @@ import numpy as np
 from utils import rgb2gray
 from matplotlib import pyplot as plt
 
-debug = False
-
 
 def get_subwindow(im, pos, sz, cos_window):
     """
-    Obtain sub-window from image, with replication-padding.
-    Returns sub-window of image IM centered at POS ([y, x] coordinates),
-    with size SZ ([height, width]). If any pixels are outside of the image,
-    they will replicate the values at the borders.
-
-    The sub-window is also normalized to range -0.5 .. 0.5, and the given
-    cosine window COS_WINDOW is applied
-    (though this part could be omitted to make the function more general).
+    使用 replication padding 从图像中获得子窗口。子窗口以 [y, x] 为坐标中心，大小为 [height, width].
+    如果子窗口超过图像边界，则复制图像的边界像素值。获得的子窗口将使用余弦窗口标准化到 [-0.5, 0.5]
+    :param im: 输入图像
+    :param pos: 子窗口中心点坐标 [y, x]
+    :param sz: 子窗口大小 [height, width]
+    :param cos_window: 余弦子窗口矩阵
+    :return: 返回经过余弦子窗口截取的图像矩形框部分
     """
-
+    # 如果不是高、宽组成的数组，而是一个一维数值，则转化为一个数组
+    # 目标是子窗矩形化
     if pylab.isscalar(sz):  # square sub-window
         sz = [sz, sz]
-
+    # 以 pos 为中心，以 sz 为窗口大小建立子窗
     ys = pylab.floor(pos[0]) + pylab.arange(sz[0], dtype=int) - pylab.floor(sz[0] / 2)
     xs = pylab.floor(pos[1]) + pylab.arange(sz[1], dtype=int) - pylab.floor(sz[1] / 2)
-
     ys = ys.astype(int)
     xs = xs.astype(int)
-
-    # check for out-of-bounds coordinates,
-    # and set them to the values at the borders
+    # 如果子窗超过坐标，则设置为边界值
     ys[ys < 0] = 0
     ys[ys >= im.shape[0]] = im.shape[0] - 1
-
     xs[xs < 0] = 0
     xs[xs >= im.shape[1]] = im.shape[1] - 1
-    # zs = range(im.shape[2])
-
-    # extract image
-    # out = im[pylab.ix_(ys, xs, zs)]
+    # 提取子窗剪切的图像块
     out = im[pylab.ix_(ys, xs)]
-
-    if debug:
-        print("Out max/min value==", out.max(), "/", out.min())
-        pylab.figure()
-        pylab.imshow(out, cmap=pylab.cm.gray)
-        pylab.title("cropped subwindow")
-
-    # pre-process window --
-    # normalize to range -0.5 .. 0.5
-    # pixels are already in range 0 to 1
+    # 将图像像素值从 [0, 1] 平移到 [-0.5, 0.5]
     out = out.astype(pylab.float64) - 0.5
+    # 余弦窗口化，论文公式 (18)
 
-    # apply cosine window
-    out = pylab.multiply(cos_window, out)
-
-    return out
+    return pylab.multiply(cos_window, out)
 
 
 if __name__ == '__main__':
@@ -77,6 +57,7 @@ if __name__ == '__main__':
     size = np.array([35., 32.])
     cos_window = pylab.outer(pylab.hanning(size[0]), pylab.hanning(size[1]))
     result = get_subwindow(im=gray, pos=position, sz=size, cos_window=cos_window)
-    print(result)
+    print(pylab.hanning(size[0]))
+    print(cos_window)
     plt.imshow(result)
     plt.show()

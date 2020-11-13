@@ -20,6 +20,8 @@ def parse_arguments():
     parser.add_option("-i", "--input", dest="video_path",
                       metavar="PATH", type="string", default=None,
                       help="path to a folder o a MILTrack video")
+    parser.add_option("-s", "--show", dest="show_result", type="string", default="yes",
+                      help="show tracking result or not")
 
     (options, args) = parser.parse_args()
     # print (options, args)
